@@ -35,4 +35,8 @@ public class StudentRegisterVO {
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     @ApiModelProperty(value = "手机号", required = true, example = "13800138000")
     private String phone;
+    
+    @NotBlank(message = "验证码不能为空")
+    @ApiModelProperty(value = "邮箱验证码", required = true, example = "123456")
+    private String verificationCode;
 } 

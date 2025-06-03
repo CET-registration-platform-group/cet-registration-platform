@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Api(tags = "用户认证接口", description = "提供用户登录、登出功能")
+@Api(tags = "用户认证接口", description = "提供后台用户登录、登出功能")
 @RequiredArgsConstructor
 public class LoginController {
 

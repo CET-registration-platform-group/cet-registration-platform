@@ -98,10 +98,10 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         }
         return super.removeById(id);
     }
-
+    
     @Override
     @Transactional
-    public void register(Student student) {
+    public void registerWithVerificationCode(Student student, String verificationCode) {
         // 检查证件号码是否已存在
         if (lambdaQuery().eq(Student::getIdentityDocumentNumber, student.getIdentityDocumentNumber()).count() > 0) {
             throw new RuntimeException("证件号码已存在");
@@ -111,30 +111,20 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         if (lambdaQuery().eq(Student::getEmail, student.getEmail()).count() > 0) {
             throw new RuntimeException("邮箱已存在");
         }
-
-        // 生成验证码
-        String code = emailUtils.generateVerificationCode();
         
-        // 发送验证邮件
-        emailUtils.sendVerificationEmail(student.getEmail(), code);
-        
-        // 保存验证码到缓存，但不保存学生信息
-        // 学生信息将在邮箱验证成功后保存
-        emailUtils.saveVerificationCode(student.getEmail(), code);
-    }
-    
-    @Override
-    public void verifyEmail(String email, String code) {
         // 验证验证码
-        if (!emailUtils.verifyCode(email, code)) {
+        if (!emailUtils.verifyCode(student.getEmail(), verificationCode)) {
             throw new RuntimeException("验证码错误或已过期");
         }
         
-        // 此时不需要更新学生的邮箱验证状态，因为学生信息尚未保存
-        // 清除验证码
-        emailUtils.removeVerificationCode(email);
+        // 加密密码
+        student.setPassword(PasswordUtils.encrypt(student.getPassword()));
         
-        // 注意：前端需要在验证成功后，调用另一个接口完成学生信息的保存
+        // 保存学生信息
+        save(student);
+        
+        // 清除验证码
+        emailUtils.removeVerificationCode(student.getEmail());
     }
     
     @Override

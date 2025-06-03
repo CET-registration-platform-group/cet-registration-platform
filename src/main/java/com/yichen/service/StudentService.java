@@ -23,17 +23,11 @@ public interface StudentService extends IService<Student> {
     boolean removeById(Long id);
 
     /**
-     * 学生注册
+     * 学生注册（带验证码验证）
      * @param student 学生信息
+     * @param verificationCode 验证码
      */
-    void register(Student student);
-
-    /**
-     * 邮箱验证
-     * @param email 邮箱
-     * @param code 验证码
-     */
-    void verifyEmail(String email, String code);
+    void registerWithVerificationCode(Student student, String verificationCode);
 
     /**
      * 学生登录

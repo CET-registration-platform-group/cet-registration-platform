@@ -5,14 +5,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yichen.entity.User;
 import com.yichen.service.UserService;
 import com.yichen.common.Result;
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Api(tags = "用户管理接口", description = "提供用户增删改查功能")
 @RequestMapping("/api/admin/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
+
     private UserService userService;
 
     @GetMapping("/page")

@@ -32,10 +32,10 @@ public class Knife4jConfig {
     @Bean
     public Docket adminApi() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .groupName("后台管理接口")
+                .groupName("前台学生接口")
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.yichen.controller.admin"))
+                .apis(RequestHandlerSelectors.basePackage("com.yichen.controller.student"))
                 .paths(PathSelectors.any())
                 .build();
     }
@@ -43,10 +43,10 @@ public class Knife4jConfig {
     @Bean
     public Docket studentApi() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .groupName("前台学生接口")
+                .groupName("后台管理接口")
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.yichen.controller.student"))
+                .apis(RequestHandlerSelectors.basePackage("com.yichen.controller.admin"))
                 .paths(PathSelectors.any())
                 .build();
     }
