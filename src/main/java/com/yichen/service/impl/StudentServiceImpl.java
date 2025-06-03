@@ -1,0 +1,194 @@
+package com.yichen.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yichen.exception.ConstraintViolationException;
+import com.yichen.mapper.StudentMapper;
+import com.yichen.entity.Student;
+import com.yichen.service.ConstraintService;
+import com.yichen.service.StudentService;
+import com.yichen.utils.BusinessValidationUtil;
+import com.yichen.utils.EmailUtils;
+import com.yichen.utils.PasswordUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 学生服务实现类
+ */
+@Service
+@RequiredArgsConstructor
+public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
+
+    private final ConstraintService constraintService;
+
+    @Autowired
+    private EmailUtils emailUtils;
+
+    @Override
+    public Page<Student> listStudents(Integer current, Integer size, String name, String identityDocumentNumber) {
+        Page<Student> page = new Page<>(current, size);
+        LambdaQueryWrapper<Student> queryWrapper = new LambdaQueryWrapper<>();
+        
+        if (name != null && !name.isEmpty()) {
+            queryWrapper.like(Student::getName, name);
+        }
+        
+        if (identityDocumentNumber != null && !identityDocumentNumber.isEmpty()) {
+            queryWrapper.like(Student::getIdentityDocumentNumber, identityDocumentNumber);
+        }
+        
+        return getBaseMapper().selectPage(page, queryWrapper);
+    }
+    
+    /**
+     * 重写updateById方法，增加约束检查
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateById(Student entity) {
+        // 获取原始实体
+        Student original = getById(entity.getId());
+        BusinessValidationUtil.checkNotNull(original, "学生不存在");
+        
+        // 检查证件号是否被修改且已被使用
+        String identityDocumentNumber = entity.getIdentityDocumentNumber();
+        String originalIdentityDocumentNumber = original.getIdentityDocumentNumber();
+        if (identityDocumentNumber != null && !identityDocumentNumber.isEmpty() 
+                && !identityDocumentNumber.equals(originalIdentityDocumentNumber)) {
+            // 检查新证件号是否唯一
+            boolean isUnique = constraintService.isIdentityDocumentNumberUnique(identityDocumentNumber, entity.getId());
+            BusinessValidationUtil.check(isUnique, "该证件号已被其他学生使用");
+            
+            // 如果证件号变更，检查原证件号是否有进行中的考试记录
+            boolean noActiveExams = constraintService.identityDocumentNumberHasNoActiveExams(originalIdentityDocumentNumber);
+            BusinessValidationUtil.check(noActiveExams, "该学生有进行中的考试记录，无法修改证件号");
+        }
+        
+        return super.updateById(entity);
+    }
+    
+    /**
+     * 重写save方法，增加约束检查
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean save(Student entity) {
+        // 检查证件号是否唯一
+        String identityDocumentNumber = entity.getIdentityDocumentNumber();
+        if (identityDocumentNumber != null && !identityDocumentNumber.isEmpty()) {
+            boolean isUnique = constraintService.isIdentityDocumentNumberUnique(identityDocumentNumber, null);
+            BusinessValidationUtil.check(isUnique, "该证件号已被使用");
+        }
+        
+        return super.save(entity);
+    }
+    
+    /**
+     * 重写removeById方法，增加约束检查
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(Long id) {
+        if (!constraintService.canDeleteStudent(id)) {
+            throw new ConstraintViolationException("无法删除该学生，存在关联的考试记录");
+        }
+        return super.removeById(id);
+    }
+
+    @Override
+    @Transactional
+    public void register(Student student) {
+        // 检查证件号码是否已存在
+        if (lambdaQuery().eq(Student::getIdentityDocumentNumber, student.getIdentityDocumentNumber()).count() > 0) {
+            throw new RuntimeException("证件号码已存在");
+        }
+
+        // 检查邮箱是否已存在
+        if (lambdaQuery().eq(Student::getEmail, student.getEmail()).count() > 0) {
+            throw new RuntimeException("邮箱已存在");
+        }
+
+        // 生成验证码
+        String code = emailUtils.generateVerificationCode();
+        
+        // 发送验证邮件
+        emailUtils.sendVerificationEmail(student.getEmail(), code);
+        
+        // 保存验证码到缓存，但不保存学生信息
+        // 学生信息将在邮箱验证成功后保存
+        emailUtils.saveVerificationCode(student.getEmail(), code);
+    }
+    
+    @Override
+    public void verifyEmail(String email, String code) {
+        // 验证验证码
+        if (!emailUtils.verifyCode(email, code)) {
+            throw new RuntimeException("验证码错误或已过期");
+        }
+        
+        // 此时不需要更新学生的邮箱验证状态，因为学生信息尚未保存
+        // 清除验证码
+        emailUtils.removeVerificationCode(email);
+        
+        // 注意：前端需要在验证成功后，调用另一个接口完成学生信息的保存
+    }
+    
+    @Override
+    public Student login(String identityDocumentNumber, String password) {
+        // 根据证件号查询学生
+        Student student = lambdaQuery().eq(Student::getIdentityDocumentNumber, identityDocumentNumber).one();
+        if (student == null) {
+            throw new RuntimeException("学生不存在");
+        }
+        
+        // 验证密码
+        if (!PasswordUtils.matches(password, student.getPassword())) {
+            throw new RuntimeException("密码错误");
+        }
+        
+        return student;
+    }
+    
+    @Override
+    public void sendResetEmail(String email) {
+        // 查询学生
+        Student student = lambdaQuery().eq(Student::getEmail, email).one();
+        if (student == null) {
+            throw new RuntimeException("该邮箱未注册");
+        }
+        
+        // 生成验证码
+        String code = emailUtils.generateVerificationCode();
+        
+        // 发送重置密码邮件
+        emailUtils.sendResetPasswordEmail(email, code);
+        
+        // 保存验证码到缓存
+        emailUtils.saveVerificationCode(email, code);
+    }
+    
+    @Override
+    public void resetPassword(String email, String code, String newPassword) {
+        // 验证验证码
+        if (!emailUtils.verifyCode(email, code)) {
+            throw new RuntimeException("验证码错误或已过期");
+        }
+        
+        // 查询学生
+        Student student = lambdaQuery().eq(Student::getEmail, email).one();
+        if (student == null) {
+            throw new RuntimeException("学生不存在");
+        }
+        
+        // 更新密码
+        student.setPassword(PasswordUtils.encrypt(newPassword));
+        updateById(student);
+        
+        // 清除验证码
+        emailUtils.removeVerificationCode(email);
+    }
+} 

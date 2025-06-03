@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yichen.mapper.ExamSiteMapper">
+    <!-- 查询考点及其统计信息（带分页） -->
+    <select id="selectWithStatisticsPage" resultType="com.yichen.entity.ExamSite">
+        SELECT 
+            es.id,
+            es.name,
+            es.address,
+            COUNT(eset.id) AS totalSeat,
+            SUM(CASE WHEN eset.status = 1 THEN 1 ELSE 0 END) AS usedSeat
+        FROM exam_site es
+        LEFT JOIN exam_room er ON es.id = er.exam_site_id
+        LEFT JOIN exam_seat eset ON er.id = eset.exam_room_id
+        <where>
+            <if test="name != null and name != ''">
+                AND es.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        GROUP BY es.id
+        LIMIT #{current}, #{size}
+    </select>
+
+    <!-- 获取考点总数量（用于分页计算） -->
+    <select id="countWithStatistics" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM exam_site es
+    </select>
+
+    <select id="getByIdWithStatistics" resultType="com.yichen.entity.ExamSite">
+        SELECT
+            es.id,
+            es.name,
+            es.address,
+            COUNT(eset.id) AS totalSeat,
+            SUM(CASE WHEN eset.status = 1 THEN 1 ELSE 0 END) AS usedSeat
+        FROM exam_site es
+        LEFT JOIN exam_room er ON es.id = er.exam_site_id
+        LEFT JOIN exam_seat eset ON er.id = eset.exam_room_id
+        WHERE es.id = #{id}
+        GROUP BY es.id
+    </select>
+</mapper>
