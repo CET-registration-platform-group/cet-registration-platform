@@ -20,7 +20,7 @@ public class ExamInfo {
     private Long id;
     private Long studentId;
     private Long examSeatId;
-    private java.sql.Timestamp examTime;
+    private LocalDateTime examTime;
     private String examType;
     private String examLevel;
 }

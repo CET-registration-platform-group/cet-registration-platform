@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yichen.entity.Student;
 import com.yichen.service.StudentService;
 import com.yichen.common.Result;
+import com.yichen.utils.PasswordUtils;
 import com.yichen.vo.StudentVO;
 import com.yichen.utils.BeanConverter;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -78,6 +80,8 @@ public class StudentController {
         @RequestBody StudentVO studentVO
     ) {
         Student student = beanConverter.convert(studentVO, Student.class);
+        String encodedPassword = PasswordUtils.encrypt(student.getPassword());
+        student.setPassword(encodedPassword);
         boolean success = studentService.save(student);
         if (success) {
             StudentVO resultVO = beanConverter.convert(student, StudentVO.class);
@@ -102,6 +106,8 @@ public class StudentController {
             return Result.error("学生ID不能为空");
         }
         Student student = beanConverter.convert(studentVO, Student.class);
+        String encodedPassword = PasswordUtils.encrypt(student.getPassword());
+        student.setPassword(encodedPassword);
         boolean success = studentService.updateById(student);
         return success ? Result.success() : Result.error("更新学生失败");
     }

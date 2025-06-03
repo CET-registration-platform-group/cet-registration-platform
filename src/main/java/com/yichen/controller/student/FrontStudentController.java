@@ -7,6 +7,8 @@ import com.yichen.utils.EmailUtils;
 import com.yichen.vo.StudentRegisterVO;
 import com.yichen.vo.StudentVO;
 import com.yichen.utils.BeanConverter;
+import com.yichen.utils.JwtUtil;
+import com.yichen.vo.TokenVO;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,7 @@ public class FrontStudentController {
     private final StudentService studentService;
     private final BeanConverter beanConverter;
     private final EmailUtils emailUtils;
+    private final JwtUtil jwtUtil;
 
     @ApiOperation(value = "发送邮箱验证码", notes = "发送邮箱验证码用于注册")
     @ApiResponses({
@@ -68,7 +71,7 @@ public class FrontStudentController {
         @ApiResponse(code = 500, message = "服务器内部错误")
     })
     @PostMapping("/login")
-    public Result<StudentVO> login(
+    public Result<TokenVO<StudentVO>> login(
         @ApiParam(value = "证件号码", required = true, example = "123456789012345678")
         @RequestParam String identityDocumentNumber,
             
@@ -76,8 +79,16 @@ public class FrontStudentController {
         @RequestParam String password
     ) {
         Student student = studentService.login(identityDocumentNumber, password);
-        StudentVO studentVO = beanConverter.convert(student, StudentVO.class);
-        return Result.success(studentVO);
+        
+        // 生成token
+        String token = jwtUtil.generateToken(student.getId(), student.getName());
+        
+        // 创建TokenVO
+        TokenVO<StudentVO> tokenVO = new TokenVO<>();
+        tokenVO.setToken(token);
+        tokenVO.setUser(beanConverter.convert(student, StudentVO.class));
+        
+        return Result.success(tokenVO);
     }
 
     @ApiOperation(value = "发送重置密码邮件", notes = "向指定邮箱发送重置密码验证码")
@@ -104,10 +115,10 @@ public class FrontStudentController {
     @PostMapping("/reset-password")
     public Result resetPassword(
         @ApiParam(value = "邮箱地址", required = true, example = "student@example.com")
-        @RequestParam String email,
+            @RequestParam String email,
             
         @ApiParam(value = "验证码", required = true, example = "123456")
-        @RequestParam String code,
+            @RequestParam String code,
             
         @ApiParam(value = "新密码", required = true)
         @RequestParam String newPassword

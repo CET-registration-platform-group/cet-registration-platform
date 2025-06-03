@@ -3,7 +3,7 @@ package com.yichen.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @ApiModel(value = "考试信息视图对象", description = "用于前后端交互的考试信息数据")
@@ -18,7 +18,7 @@ public class ExamInfoVO {
     private Long examSeatId;
     
     @ApiModelProperty(value = "考试时间", example = "2023-12-15 09:00:00", required = true, position = 4)
-    private Timestamp examTime;
+    private LocalDateTime examTime;
     
     @ApiModelProperty(value = "考试类型", example = "笔试", notes = "笔试/口试", required = true, position = 5)
     private String examType;

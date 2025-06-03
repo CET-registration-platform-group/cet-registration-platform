@@ -2,7 +2,9 @@ package com.yichen.config;
 
 import com.alibaba.fastjson.JSON;
 import com.yichen.entity.Student;
+import com.yichen.entity.User;
 import com.yichen.mapper.StudentMapper;
+import com.yichen.mapper.UserMapper;
 import com.yichen.utils.JwtUtil;
 import com.yichen.utils.UserContext;
 import com.yichen.common.Result;
@@ -16,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * 认证拦截器，拦截未登录学生访问需要认证的接口
+ * 认证拦截器，拦截未登录用户访问需要认证的接口
  */
 @Component
 @RequiredArgsConstructor
@@ -24,23 +26,16 @@ public class AuthInterceptor implements HandlerInterceptor {
     
     private final JwtUtil jwtUtil;
     private final StudentMapper studentMapper;
+    private final UserMapper userMapper;
     private final UserContext userContext;
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
-        // 放行登录、登出接口
+        // 获取请求URI
         String requestURI = request.getRequestURI();
-        if (requestURI.contains("/auth/login") || requestURI.contains("/auth/logout")) {
-            return true;
-        }
         
-        // 放行Knife4j的相关接口
-        if (requestURI.contains("/doc.html") || 
-            requestURI.contains("/swagger") || 
-            requestURI.contains("/v2/api-docs") || 
-            requestURI.contains("/webjars/")) {
-            return true;
-        }
+        // 判断是前台还是后台请求
+        boolean isAdminRequest = requestURI.startsWith("/api/admin/");
         
         // 获取Authorization请求头中的Token
         String authHeader = request.getHeader("Authorization");
@@ -60,21 +55,39 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
         
-        // Token有效，获取学生信息并设置到上下文
-        Long studentId = jwtUtil.getUserIdFromToken(token);
-        if (studentId != null) {
-            Student student = studentMapper.selectById(studentId);
-            if (student != null) {
-                userContext.setCurrentStudent(student);
-                return true;
-            }
+        // Token有效，获取用户ID
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        if (userId == null) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(JSON.toJSONString(Result.error(401, "无效的用户信息")));
+            return false;
         }
         
-        // 学生不存在
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write(JSON.toJSONString(Result.error(401, "学生不存在或已被删除")));
-        return false;
+        // 根据请求类型验证不同的用户
+        if (isAdminRequest) {
+            // 后台请求，验证管理员
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write(JSON.toJSONString(Result.error(401, "管理员不存在或已被删除")));
+                return false;
+            }
+            userContext.setCurrentUser(user);
+        } else {
+            // 前台请求，验证学生
+            Student student = studentMapper.selectById(userId);
+            if (student == null) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write(JSON.toJSONString(Result.error(401, "学生不存在或已被删除")));
+                return false;
+            }
+            userContext.setCurrentStudent(student);
+        }
+        
+        return true;
     }
     
     @Override
