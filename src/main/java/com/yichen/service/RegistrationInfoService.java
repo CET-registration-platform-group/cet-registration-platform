@@ -8,7 +8,8 @@ public interface RegistrationInfoService extends IService<RegistrationInfo> {
     /**
      * 完成当前步骤并进入下一步
      * @param studentId 学生ID
-     * @param registrationInfoVO 报名信息视图对象
+     * @param completedStep 要完成的步骤名称
+     * @throws RuntimeException 当步骤不是合法下一步时抛出异常
      */
-    void completeStep(Long studentId, RegistrationInfoVO registrationInfoVO);
+    void completeStep(Long studentId, String completedStep);
 } 

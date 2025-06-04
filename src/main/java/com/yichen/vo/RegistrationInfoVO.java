@@ -16,12 +16,9 @@ public class RegistrationInfoVO {
     @ApiModelProperty(value = "学生ID", example = "1", position = 2)
     private Long studentId;
     
-    @ApiModelProperty(value = "考试ID", example = "1", position = 3)
-    private Long examId;
+    @ApiModelProperty(value = "当前步骤", example = "AGREEMENT", position = 3)
+    private String currentStep;
     
-    @ApiModelProperty(value = "报名信息JSON", example = "{\"name\":\"张三\",\"gender\":\"男\"}", position = 4)
-    private String registrationInfo;
-    
-    @ApiModelProperty(value = "报名状态", example = "PENDING", position = 5)
-    private String status;
+    @ApiModelProperty(value = "已完成步骤", example = "[\"AGREEMENT\",\"QUAL_QUERY\"]", position = 4)
+    private String completedSteps;
 } 

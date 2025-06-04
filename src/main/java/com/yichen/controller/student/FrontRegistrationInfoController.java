@@ -40,10 +40,11 @@ public class FrontRegistrationInfoController {
         return Result.success(vo);
     }
 
-    @ApiOperation(value = "完成当前步骤", notes = "完成报名流程的当前步骤")
+    @ApiOperation(value = "完成当前步骤", notes = "完成报名流程的当前步骤，并更新当前步骤为下一步")
     @ApiResponses({
         @ApiResponse(code = 200, message = "操作成功", response = Result.class),
-        @ApiResponse(code = 400, message = "参数错误"),
+        @ApiResponse(code = 400, message = "参数错误或步骤不是合法下一步"),
+        @ApiResponse(code = 404, message = "报名信息不存在"),
         @ApiResponse(code = 500, message = "服务器内部错误")
     })
     @PostMapping("/complete-step")
@@ -51,10 +52,11 @@ public class FrontRegistrationInfoController {
         @ApiParam(value = "学生ID", required = true, example = "1")
         @RequestParam Long studentId,
             
-        @ApiParam(value = "报名信息JSON", required = true)
-        @RequestBody  RegistrationInfoVO registrationInfoVO
+        @ApiParam(value = "要完成的步骤名称", required = true, example = "AGREEMENT", 
+                 allowableValues = "AGREEMENT,QUAL_QUERY,QUAL_CONFIRM,WRITTEN_APPLY,WRITTEN_PAY,ORAL_APPLY,ORAL_PAY,COMPLETE,PRINT_ADMIT")
+        @RequestBody String completedStep
     ) {
-        registrationInfoService.completeStep(studentId, registrationInfoVO);
+        registrationInfoService.completeStep(studentId, completedStep);
         return Result.success("步骤完成");
     }
 } 
