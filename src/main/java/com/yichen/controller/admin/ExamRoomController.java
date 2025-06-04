@@ -1,5 +1,6 @@
 package com.yichen.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yichen.entity.ExamRoom;
 import com.yichen.service.ExamRoomService;
@@ -9,6 +10,8 @@ import com.yichen.utils.BeanConverter;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/exam-rooms")
@@ -43,6 +46,23 @@ public class ExamRoomController {
         result.setRecords(beanConverter.convertList(page.getRecords(), ExamRoomVO.class));
         return Result.success(result);
     }
+
+    //获取考场列表，不分页
+    @ApiOperation(value = "获取考场列表", notes = "获取考场列表，不分页，可根据考点ID筛选")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "操作成功", response = Result.class),
+        @ApiResponse(code = 500, message = "服务器内部错误")
+    })
+    @GetMapping("/list")
+    public Result<List<ExamRoomVO>> listAll(
+        @ApiParam(value = "考点ID(所属考点)")
+        @RequestParam(required = false) Long examSiteId
+    ) {
+        LambdaQueryWrapper<ExamRoom> wrapper = new LambdaQueryWrapper<ExamRoom>().eq(ExamRoom::getExamSiteId, examSiteId);
+        List<ExamRoomVO>  list= beanConverter.convertList(examRoomService.list(wrapper), ExamRoomVO.class);
+        return Result.success(list);
+    }
+
 
     @ApiOperation(value = "根据ID获取考场", notes = "通过考场ID获取考场详细信息")
     @ApiResponses({

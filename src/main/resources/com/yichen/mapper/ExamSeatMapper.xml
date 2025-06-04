@@ -1,4 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.yichen.mapper.ExamSeatMapper">
+    <select id="getPage" resultType="com.yichen.vo.ExamSeatVO">
+        #联表查询
+        SELECT
+            exam_seat.id,
+            exam_seat.exam_room_id,
+            exam_seat.seat_number,
+            exam_seat.status,
+            exam_room.room_number AS examRoomName,
+            exam_site.name AS examSiteName
+        FROM exam_seat
+        LEFT JOIN exam_room  ON exam_seat.exam_room_id = exam_room.id
+        LEFT JOIN exam_site ON exam_room.exam_site_id = exam_site.id
+        <where>
+            <if test="examRoomId != null">
+                exam_room_id = #{examRoomId}
+            </if>
+            <if test="seatNumber != null">
+                 seat_number LIKE CONCAT('%', #{seatNumber}, '%')
+            </if>
+            <if test="status != null">
+                 status = #{status}
+            </if>
+        </where>
+        LIMIT  #{pageSize}  OFFSET #{offset}
+    </select>
+
+
+    <!-- 获取总数 -->
+    <select id="countPage" resultType="int">
+        SELECT COUNT(*)
+        FROM exam_seat
+        LEFT JOIN exam_room ON exam_seat.exam_room_id = exam_room.id
+        LEFT JOIN exam_site ON exam_room.exam_site_id = exam_site.id
+        <where>
+            <if test="examRoomId != null">
+                exam_room_id = #{examRoomId}
+            </if>
+            <if test="seatNumber != null">
+                 seat_number LIKE CONCAT('%', #{seatNumber}, '%')
+            </if>
+            <if test="status != null">
+                 status = #{status}
+            </if>
+        </where>
+    </select>
 </mapper>

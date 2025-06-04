@@ -31,6 +31,9 @@ public class AuthInterceptor implements HandlerInterceptor {
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
+        if (request.getMethod().equals("OPTIONS")) {
+            return true;
+        }
         // 获取请求URI
         String requestURI = request.getRequestURI();
         

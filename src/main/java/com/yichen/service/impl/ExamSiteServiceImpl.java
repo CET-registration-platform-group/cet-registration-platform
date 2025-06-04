@@ -37,12 +37,18 @@ public class ExamSiteServiceImpl extends ServiceImpl<ExamSiteMapper, ExamSite> i
 
     @Override
     public Page<ExamSite> getExamSitesWithStatisticsPage(Integer current, Integer size, String name) {
-        List<ExamSite> examSites = getBaseMapper().selectWithStatisticsPage(current-1, size, name);
+        Integer offset = (current - 1) * size;
+        List<ExamSite> examSites = getBaseMapper().selectWithStatisticsPage(offset, size, name);
         return new Page<ExamSite>(current, size).setRecords(examSites);
     }
 
     @Override
     public ExamSite getByIdWithStatistics(Long id) {
         return getBaseMapper().getByIdWithStatistics(id);
+    }
+
+    @Override
+    public ExamSite getByExamSiteId(Long examSiteId) {
+        return getBaseMapper().getByExamSiteId(examSiteId);
     }
 } 

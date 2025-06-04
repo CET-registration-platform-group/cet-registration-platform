@@ -22,4 +22,6 @@ public interface ExamSiteService extends IService<ExamSite> {
     Page<ExamSite> getExamSitesWithStatisticsPage(Integer current, Integer size , String name);
 
     ExamSite getByIdWithStatistics(Long id);
+
+    ExamSite getByExamSiteId(Long examSiteId);
 }

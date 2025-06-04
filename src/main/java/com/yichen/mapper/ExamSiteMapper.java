@@ -13,7 +13,9 @@ public interface ExamSiteMapper extends BaseMapper<ExamSite> {
      */
     long countWithStatistics();
 
-    List<ExamSite> selectWithStatisticsPage(int current, int size, String name);
+    List<ExamSite> selectWithStatisticsPage(int offset, int limit, String name);
 
     ExamSite getByIdWithStatistics(Long id);
+
+    ExamSite getByExamSiteId(Long examSiteId);
 }

@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.yichen.entity.ExamRoom;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * 考场服务接口
  */
@@ -21,4 +23,6 @@ public interface ExamRoomService extends IService<ExamRoom> {
 
     @Transactional(rollbackFor = Exception.class)
     boolean removeById(Long id);
+
+    List<ExamRoom> getByExamSiteId(Long examSiteId);
 }

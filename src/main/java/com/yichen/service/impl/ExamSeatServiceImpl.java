@@ -11,9 +11,12 @@ import com.yichen.service.ConstraintService;
 import com.yichen.service.ExamSeatService;
 import com.yichen.service.ExamRoomService;
 import com.yichen.utils.BusinessValidationUtil;
+import com.yichen.vo.ExamSeatVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 考试座位服务实现类
@@ -25,25 +28,6 @@ public class ExamSeatServiceImpl extends ServiceImpl<ExamSeatMapper, ExamSeat> i
     private final ConstraintService constraintService;
     private final ExamRoomService examRoomService;
 
-    @Override
-    public Page<ExamSeat> listExamSeats(Integer current, Integer size, String seatNumber, Integer status, Long examRoomId) {
-        Page<ExamSeat> page = new Page<>(current, size);
-        LambdaQueryWrapper<ExamSeat> queryWrapper = new LambdaQueryWrapper<>();
-        
-        if (seatNumber != null && !seatNumber.isEmpty()) {
-            queryWrapper.like(ExamSeat::getSeatNumber, seatNumber);
-        }
-        
-        if (examRoomId != null) {
-            queryWrapper.eq(ExamSeat::getExamRoomId, examRoomId);
-        }
-        
-        if (status != null) {
-            queryWrapper.eq(ExamSeat::getStatus, status);
-        }
-        
-        return getBaseMapper().selectPage(page, queryWrapper);
-    }
     
     /**
      * 重写updateById方法，增加约束检查
@@ -76,7 +60,7 @@ public class ExamSeatServiceImpl extends ServiceImpl<ExamSeatMapper, ExamSeat> i
         
         return super.save(entity);
     }
-    
+
     /**
      * 重写removeById方法，增加约束检查
      */
@@ -87,5 +71,15 @@ public class ExamSeatServiceImpl extends ServiceImpl<ExamSeatMapper, ExamSeat> i
             throw new ConstraintViolationException("无法删除该座位，存在关联的考试记录");
         }
         return super.removeById(id);
+    }
+
+    @Override
+    public List<ExamSeatVO> getPage(Integer offset, Integer pageSize, Long examRoomId, String seatNumber, Integer status) {
+        return getBaseMapper().getPage(offset, pageSize, examRoomId, seatNumber, status);
+    }
+
+    @Override
+    public int count(Long examRoomId, String seatNumber, Integer status) {
+        return getBaseMapper().countPage(examRoomId, seatNumber, status);
     }
 } 

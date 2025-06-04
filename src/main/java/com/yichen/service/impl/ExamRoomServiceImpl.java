@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * 考场服务实现类
  */
@@ -83,5 +85,10 @@ public class ExamRoomServiceImpl extends ServiceImpl<ExamRoomMapper, ExamRoom> i
             throw new ConstraintViolationException("无法删除该考场，存在关联的座位");
         }
         return super.removeById(id);
+    }
+
+    @Override
+    public List<ExamRoom> getByExamSiteId(Long examSiteId) {
+        return getBaseMapper().getByExamSiteId(examSiteId);
     }
 } 

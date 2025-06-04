@@ -10,6 +10,8 @@ import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/exam-sites")
 @Api(tags = "考点管理接口", description = "提供考点的增删改查功能")
@@ -35,11 +37,23 @@ public class ExamSiteController {
         @ApiParam(value = "考点名称(支持模糊查询)")
         @RequestParam(required = false) String name
     ) {
-        Page<ExamSite> page = examSiteService.page(new Page<>(pageNum, pageSize));
+        Page<ExamSite> page = examSiteService.getExamSitesWithStatisticsPage(pageNum, pageSize, name);
         Page<ExamSiteVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(beanConverter.convertList(page.getRecords(), ExamSiteVO.class));
         return Result.success(result);
     }
+    //获取考点列表，不分页
+    @ApiOperation(value = "获取考点列表", notes = "获取考点列表，不分页")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "操作成功", response = Result.class),
+        @ApiResponse(code = 500, message = "服务器内部错误")
+    })
+    @GetMapping("/list")
+    public Result<List<ExamSiteVO>> list() {
+        List<ExamSiteVO> examSiteList = beanConverter.convertList(examSiteService.list(), ExamSiteVO.class);
+        return Result.success(examSiteList);
+    }
+
 
     @ApiOperation(value = "根据ID获取考点", notes = "通过考点ID获取考点详细信息")
     @ApiResponses({
@@ -59,6 +73,22 @@ public class ExamSiteController {
         ExamSiteVO examSiteVO = beanConverter.convert(examSite, ExamSiteVO.class);
         return Result.success(examSiteVO);
     }
+
+    //根据考场获取考点
+    @GetMapping("/examSite/{examSiteId}")
+    @ApiOperation(value = "根据考场获取考点", notes = "通过考场ID获取考点详细信息")
+    public Result<ExamSiteVO> getByExamSiteId(
+        @ApiParam(value = "考场ID(唯一标识)", required = true, example = "1")
+        @PathVariable Long examSiteId
+    ) {
+        ExamSite examSite = examSiteService.getByExamSiteId(examSiteId);
+        if (examSite == null) {
+            return Result.error("考点不存在");
+        }
+        ExamSiteVO examSiteVO = beanConverter.convert(examSite, ExamSiteVO.class);
+        return Result.success(examSiteVO);
+    }
+
 
     @ApiOperation(value = "添加考点", notes = "创建新的考点")
     @ApiResponses({

@@ -1,5 +1,7 @@
 package com.yichen.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yichen.entity.ExamSeat;
 import com.yichen.service.ExamSeatService;
@@ -9,6 +11,8 @@ import com.yichen.utils.BeanConverter;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/exam-seats")
@@ -36,11 +40,32 @@ public class ExamSeatController {
         @RequestParam(required = false) Long examRoomId,
             
         @ApiParam(value = "座位号(支持模糊查询)")
-        @RequestParam(required = false) String seatNumber
+        @RequestParam(required = false) String seatNumber,
+
+        @ApiParam(value = "座位状态(0-未占用，1-占用)")
+        @RequestParam(required = false) Integer status
     ) {
-        Page<ExamSeat> page = examSeatService.page(new Page<>(pageNum, pageSize));
-        Page<ExamSeatVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        result.setRecords(beanConverter.convertList(page.getRecords(), ExamSeatVO.class));
+        Integer offset=pageSize*(pageNum-1);
+        List<ExamSeatVO> list= examSeatService.getPage(offset,pageSize,examRoomId,seatNumber,status);
+        int total =examSeatService.count(examRoomId,  seatNumber, status);
+        Page<ExamSeatVO> result = new Page<>(pageNum, pageSize,total);
+        result.setRecords(list);
+        return Result.success(result);
+    }
+    //获取座位信息，不分页
+    @ApiOperation(value = "获取座位列表", notes = "获取座位列表，不分页，可根据考场ID筛选")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "操作成功", response = Result.class),
+        @ApiResponse(code = 500, message = "服务器内部错误")
+    })
+    @GetMapping("/list")
+    public Result<List<ExamSeatVO>> list(
+            @ApiParam(value = "考场ID(所属考场)")
+            @RequestParam(required = false) Long examRoomId
+    ){
+        LambdaQueryWrapper<ExamSeat> wrapper = new LambdaQueryWrapper<>();
+        List<ExamSeat> examSeats= examSeatService.list(wrapper);
+        List<ExamSeatVO> result = beanConverter.convertList(examSeats, ExamSeatVO.class);
         return Result.success(result);
     }
 
@@ -81,6 +106,22 @@ public class ExamSeatController {
             return Result.success(resultVO);
         }
         return Result.error("添加座位失败");
+    }
+    //批量添加座位
+    @ApiOperation(value = "批量添加座位", notes = "创建新的考试座位")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "操作成功", response = Result.class),
+        @ApiResponse(code = 400, message = "参数错误"),
+        @ApiResponse(code = 404, message = "座位不存在"),
+        @ApiResponse(code = 500, message = "服务器内部错误")
+    })
+    @PostMapping("/batch")
+    public Result addBatch(
+        @ApiParam(value = "座位信息(包含座位基本信息和所属考场信息)", required = true)
+        @RequestBody List<ExamSeatVO> examSeatVOList
+    ) {
+        examSeatService.saveBatch(beanConverter.convertList(examSeatVOList, ExamSeat.class));
+        return Result.success("添加成功");
     }
 
     @ApiOperation(value = "更新座位", notes = "修改现有座位信息")

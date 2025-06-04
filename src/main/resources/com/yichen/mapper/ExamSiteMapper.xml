@@ -18,8 +18,8 @@
                 AND es.name LIKE CONCAT('%', #{name}, '%')
             </if>
         </where>
-        GROUP BY es.id
-        LIMIT #{current}, #{size}
+        GROUP BY es.id, es.name, es.address
+        LIMIT #{offset}, #{limit}
     </select>
 
     <!-- 获取考点总数量（用于分页计算） -->
@@ -39,5 +39,13 @@
         LEFT JOIN exam_seat eset ON er.id = eset.exam_room_id
         WHERE es.id = #{id}
         GROUP BY es.id
+    </select>
+
+    <select id="getByExamSiteId" resultType="com.yichen.entity.ExamSite">
+    #联表查询
+        select  *
+        from exam_site es
+        left join exam_room er on es.id = er.exam_site_id
+        where es.id = #{examSiteId}
     </select>
 </mapper>

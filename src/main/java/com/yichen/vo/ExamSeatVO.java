@@ -18,4 +18,12 @@ public class ExamSeatVO {
 
     @ApiModelProperty(value = "座位号", example = "A-25", required = true, position = 4)
     private String seatNumber;
+
+    //所属考场名称
+    @ApiModelProperty(value = "所属考场名称", example = "北京大学考点", position = 5)
+    private String examRoomName;
+
+    //所属考点名称
+    @ApiModelProperty(value = "所属考点名称", example = "北京大学考点", position = 6)
+    private String examSiteName;
 }
