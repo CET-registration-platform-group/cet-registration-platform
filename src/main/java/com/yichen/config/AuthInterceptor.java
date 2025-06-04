@@ -74,15 +74,15 @@ public class AuthInterceptor implements HandlerInterceptor {
                 response.getWriter().write(JSON.toJSONString(Result.error(401, "管理员不存在或已被删除")));
                 return false;
             }
-            userContext.setCurrentUser(user);
+                userContext.setCurrentUser(user);
         } else {
             // 前台请求，验证学生
             Student student = studentMapper.selectById(userId);
             if (student == null) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write(JSON.toJSONString(Result.error(401, "学生不存在或已被删除")));
-                return false;
+        return false;
             }
             userContext.setCurrentStudent(student);
         }

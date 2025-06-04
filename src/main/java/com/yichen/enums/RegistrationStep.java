@@ -42,14 +42,21 @@ public enum RegistrationStep {
     }
 
     // 获取有效下一步（含业务逻辑判断）
-    public List<RegistrationStep> getNextSteps(boolean hasOral) {
+    public List<RegistrationStep> getNextSteps(boolean includeOral) {
         List<RegistrationStep> steps = new ArrayList<>();
         
-        if (this == WRITTEN_PAY) {
-            if (hasOral) steps.add(ORAL_APPLY);
-            steps.add(COMPLETE);
+        // 获取所有可能的下一步
+        List<RegistrationStep> allNextSteps = FLOW.getOrDefault(this, Collections.emptyList());
+        
+        // 如果不包含口试步骤，则过滤掉口试相关的步骤
+        if (!includeOral) {
+            for (RegistrationStep step : allNextSteps) {
+                if (step != ORAL_APPLY && step != ORAL_PAY) {
+                    steps.add(step);
+                }
+            }
         } else {
-            steps.addAll(FLOW.getOrDefault(this, Collections.emptyList()));
+            steps.addAll(allNextSteps);
         }
         
         return steps;

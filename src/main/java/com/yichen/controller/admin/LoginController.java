@@ -32,7 +32,7 @@ public class LoginController {
         if (tokenVO != null) {
             return Result.success(tokenVO);
         }
-        return Result.error("用户名或密码错误");
+            return Result.error("用户名或密码错误");
     }
 
     @ApiOperation(value = "管理员登出", notes = "管理员登出并清除token")

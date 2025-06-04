@@ -51,10 +51,10 @@ public class FrontRegistrationInfoController {
         @ApiParam(value = "学生ID", required = true, example = "1")
         @RequestParam Long studentId,
             
-        @ApiParam(value = "是否选择口试", defaultValue = "false")
-        @RequestParam(required = false, defaultValue = "false") boolean chooseOral
+        @ApiParam(value = "报名信息JSON", required = true)
+        @RequestBody  RegistrationInfoVO registrationInfoVO
     ) {
-        registrationInfoService.completeStep(studentId, chooseOral);
+        registrationInfoService.completeStep(studentId, registrationInfoVO);
         return Result.success("步骤完成");
     }
 } 

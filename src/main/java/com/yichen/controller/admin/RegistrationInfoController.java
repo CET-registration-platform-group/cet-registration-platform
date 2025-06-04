@@ -81,10 +81,7 @@ public class RegistrationInfoController {
         for (RegistrationInfoVO vo : voList) {
             Student student = studentService.getById(vo.getStudentId());
             if (student != null) {
-                vo.setExamId(null); // 暂时设为null，实际应从考试信息表获取
-                vo.setExamName(null);
-                vo.setExamType(null);
-                // 其他字段也需要从相关表获取，这里暂时不填充
+                // 不再需要填充额外字段，因为都存储在registrationInfo JSON中
             }
         }
         
@@ -111,7 +108,7 @@ public class RegistrationInfoController {
         // 填充学生信息
         Student student = studentService.getById(registrationInfo.getStudentId());
         if (student != null) {
-            // 填充相关信息，实际应从其他表获取
+            // 不再需要填充额外字段，因为都存储在registrationInfo JSON中
         }
         
         return Result.success(vo);
