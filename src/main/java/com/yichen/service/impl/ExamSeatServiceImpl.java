@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -44,7 +45,10 @@ public class ExamSeatServiceImpl extends ServiceImpl<ExamSeatMapper, ExamSeat> i
         
         return super.updateById(entity);
     }
-    
+
+    public ExamSeatVO getExamSeatVOById(Long id) {
+        return baseMapper.getExamSeatVOById(id);
+    }
     /**
      * 重写save方法，增加约束检查
      */

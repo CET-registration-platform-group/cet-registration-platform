@@ -1,5 +1,6 @@
 package com.yichen.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yichen.entity.ExamInfo;
 import com.yichen.service.ExamInfoService;
@@ -8,6 +9,7 @@ import com.yichen.vo.ExamInfoVO;
 import com.yichen.utils.BeanConverter;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -38,7 +40,14 @@ public class ExamInfoController {
         @ApiParam(value = "考试时间(格式：yyyy-MM-dd)")
         @RequestParam(required = false) String examTime
     ) {
-        Page<ExamInfo> page = examInfoService.page(new Page<>(pageNum, pageSize));
+        LambdaQueryWrapper<ExamInfo> wrapper = new LambdaQueryWrapper<>();
+        if(StringUtils.isNotBlank(examType)){
+            wrapper.like(ExamInfo::getExamType, examType);
+        }
+        if (StringUtils.isNotBlank(examTime)){
+            wrapper.eq(ExamInfo::getExamTime, examTime);
+        }
+        Page<ExamInfo> page = examInfoService.page(new Page<>(pageNum, pageSize),  wrapper);
         Page<ExamInfoVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(beanConverter.convertList(page.getRecords(), ExamInfoVO.class));
         return Result.success(result);

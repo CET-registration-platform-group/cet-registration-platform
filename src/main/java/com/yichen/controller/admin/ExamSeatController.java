@@ -80,11 +80,10 @@ public class ExamSeatController {
         @ApiParam(value = "座位ID(唯一标识)", required = true, example = "1")
         @PathVariable Long id
     ) {
-        ExamSeat examSeat = examSeatService.getById(id);
-        if (examSeat == null) {
+        ExamSeatVO examSeatVO = examSeatService.getExamSeatVOById(id);
+        if (examSeatVO == null) {
             return Result.error("座位不存在");
         }
-        ExamSeatVO examSeatVO = beanConverter.convert(examSeat, ExamSeatVO.class);
         return Result.success(examSeatVO);
     }
 

@@ -51,6 +51,17 @@ public class ExamInfoServiceImpl extends ServiceImpl<ExamInfoMapper, ExamInfo> i
     }
     
     /**
+     * 检查学生是否已经报名
+     * @param studentId 学生ID
+     * @return 如果学生已经报名返回true，否则返回false
+     */
+    private boolean isStudentRegistered(Long studentId) {
+        LambdaQueryWrapper<ExamInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ExamInfo::getStudentId, studentId);
+        return count(queryWrapper) > 0;
+    }
+    
+    /**
      * 重写updateById方法，增加约束检查
      */
     @Override
@@ -61,13 +72,31 @@ public class ExamInfoServiceImpl extends ServiceImpl<ExamInfoMapper, ExamInfo> i
         if (studentId != null) {
             Student student = studentService.getById(studentId);
             BusinessValidationUtil.checkNotNull(student, "关联的学生不存在");
+            
+            // 检查学生是否已经报名（排除当前记录）
+            if (entity.getId() != null) {
+                LambdaQueryWrapper<ExamInfo> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(ExamInfo::getStudentId, studentId)
+                          .ne(ExamInfo::getId, entity.getId());
+                BusinessValidationUtil.check(count(queryWrapper) == 0, "该学生已经报名，不能重复报名");
+            }
         }
         
-        // 检查座位是否存在
+        // 检查座位是否存在且可用
         Long examSeatId = entity.getExamSeatId();
         if (examSeatId != null) {
             ExamSeat examSeat = examSeatService.getById(examSeatId);
             BusinessValidationUtil.checkNotNull(examSeat, "关联的座位不存在");
+            
+            // 检查座位是否已被占用（排除当前记录）
+            if (entity.getId() != null) {
+                LambdaQueryWrapper<ExamInfo> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(ExamInfo::getExamSeatId, examSeatId)
+                          .ne(ExamInfo::getId, entity.getId());
+                BusinessValidationUtil.check(count(queryWrapper) == 0, "该座位已被占用");
+            } else {
+                BusinessValidationUtil.check(examSeat.getStatus() == 0, "该座位已被占用");
+            }
         }
         
         return super.updateById(entity);
@@ -84,16 +113,19 @@ public class ExamInfoServiceImpl extends ServiceImpl<ExamInfoMapper, ExamInfo> i
         if (studentId != null) {
             Student student = studentService.getById(studentId);
             BusinessValidationUtil.checkNotNull(student, "关联的学生不存在");
+            
+            // 检查学生是否已经报名
+            BusinessValidationUtil.check(!isStudentRegistered(studentId), "该学生已经报名，不能重复报名");
         }
         
-        // 检查座位是否存在
+        // 检查座位是否存在且可用
         Long examSeatId = entity.getExamSeatId();
         if (examSeatId != null) {
             ExamSeat examSeat = examSeatService.getById(examSeatId);
             BusinessValidationUtil.checkNotNull(examSeat, "关联的座位不存在");
             
             // 检查座位状态是否可用
-            BusinessValidationUtil.check(examSeat.getStatus() == 0, "选择的座位已被占用");
+            BusinessValidationUtil.check(examSeat.getStatus() == 0, "该座位已被占用");
         
             // 更新座位状态为已占用
             examSeat.setStatus(1);

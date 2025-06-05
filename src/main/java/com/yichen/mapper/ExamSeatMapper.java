@@ -12,4 +12,6 @@ public interface ExamSeatMapper extends BaseMapper<ExamSeat> {
     List<ExamSeatVO> getPage(Integer offset, Integer pageSize, Long examRoomId, String seatNumber, Integer status);
 
     int countPage(Long examRoomId, String seatNumber, Integer status);
+
+    ExamSeatVO getExamSeatVOById(Long id);
 }

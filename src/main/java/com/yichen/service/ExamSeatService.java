@@ -6,6 +6,7 @@ import com.yichen.entity.ExamSeat;
 import com.yichen.vo.ExamSeatVO;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -19,4 +20,6 @@ public interface ExamSeatService extends IService<ExamSeat> {
     List<ExamSeatVO> getPage(Integer offset, Integer limit, Long examRoomId, String seatNumber, Integer status);
 
     int count(Long examRoomId, String seatNumber, Integer status);
+
+    ExamSeatVO getExamSeatVOById(Long id);
 }
