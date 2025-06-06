@@ -2,7 +2,10 @@ package com.yichen.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yichen.common.Result;
 import com.yichen.entity.Student;
+import com.yichen.vo.StudentVO;
+import com.yichen.vo.TokenVO;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -31,11 +34,12 @@ public interface StudentService extends IService<Student> {
 
     /**
      * 学生登录
+     *
      * @param identityDocumentNumber 证件号码
-     * @param password 密码
+     * @param password               密码
      * @return 学生信息
      */
-    Student login(String identityDocumentNumber, String password);
+    Result<TokenVO<StudentVO>> login(String identityDocumentNumber, String password);
 
     /**
      * 发送重置密码邮件

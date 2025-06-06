@@ -44,7 +44,7 @@ public class FrontStudentController {
         // 生成验证码并发送邮件
         String code = emailUtils.generateVerificationCode();
         emailUtils.sendVerificationEmail(email, code);
-        
+
         return Result.success("验证码已发送，请查收邮件");
     }
 
@@ -74,21 +74,11 @@ public class FrontStudentController {
     public Result<TokenVO<StudentVO>> login(
         @ApiParam(value = "证件号码", required = true, example = "123456789012345678")
         @RequestParam String identityDocumentNumber,
-            
+
         @ApiParam(value = "密码", required = true)
         @RequestParam String password
     ) {
-        Student student = studentService.login(identityDocumentNumber, password);
-        
-        // 生成token
-        String token = jwtUtil.generateToken(student.getId(), student.getName());
-        
-        // 创建TokenVO
-        TokenVO<StudentVO> tokenVO = new TokenVO<>();
-        tokenVO.setToken(token);
-        tokenVO.setUser(beanConverter.convert(student, StudentVO.class));
-        
-        return Result.success(tokenVO);
+         return studentService.login(identityDocumentNumber, password);
     }
 
     @ApiOperation(value = "发送重置密码邮件", notes = "向指定邮箱发送重置密码验证码")
@@ -116,14 +106,14 @@ public class FrontStudentController {
     public Result resetPassword(
         @ApiParam(value = "邮箱地址", required = true, example = "student@example.com")
             @RequestParam String email,
-            
+
         @ApiParam(value = "验证码", required = true, example = "123456")
             @RequestParam String code,
-            
+
         @ApiParam(value = "新密码", required = true)
         @RequestParam String newPassword
     ) {
         studentService.resetPassword(email, code, newPassword);
         return Result.success("密码重置成功");
     }
-} 
+}

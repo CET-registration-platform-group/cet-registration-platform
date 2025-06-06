@@ -44,4 +44,11 @@ public class Result<T> {
     public static Result<Void> success(String message) {
         return new Result<>(200, message, null);
     }
+
+    public static<T> Result<T> failed(String message , T data) {
+        return new Result<>(400,message,data);
+    }
+    public static<T> Result<T> failed(String message) {
+        return new Result<>(400,message,null);
+    }
 }
