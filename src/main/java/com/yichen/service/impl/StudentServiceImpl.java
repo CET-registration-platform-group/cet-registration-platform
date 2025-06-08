@@ -104,20 +104,21 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     @Transactional
-    public void registerWithVerificationCode(Student student, String verificationCode) {
+    public Result registerWithVerificationCode(Student student, String verificationCode) {
         // 检查证件号码是否已存在
         if (lambdaQuery().eq(Student::getIdentityDocumentNumber, student.getIdentityDocumentNumber()).count() > 0) {
-            throw new RuntimeException("证件号码已存在");
+            return Result.failed("证件号码已存在");
         }
 
         // 检查邮箱是否已存在
         if (lambdaQuery().eq(Student::getEmail, student.getEmail()).count() > 0) {
-            throw new RuntimeException("邮箱已存在");
+            return Result.failed("邮箱已存在");
         }
 
-        // 验证验证码
+
+//         验证验证码
         if (!emailUtils.verifyCode(student.getEmail(), verificationCode)) {
-            throw new RuntimeException("验证码错误或已过期");
+            return Result.failed("验证码错误或已过期");
         }
 
         // 加密密码
@@ -128,6 +129,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // 清除验证码
         emailUtils.removeVerificationCode(student.getEmail());
+        return Result.success();
     }
 
     @Override

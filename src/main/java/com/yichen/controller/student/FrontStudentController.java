@@ -60,8 +60,7 @@ public class FrontStudentController {
         @Validated @RequestBody StudentRegisterVO registerVO
     ) {
         Student student = beanConverter.convert(registerVO, Student.class);
-        studentService.registerWithVerificationCode(student, registerVO.getVerificationCode());
-        return Result.success("注册成功");
+        return studentService.registerWithVerificationCode(student, registerVO.getVerificationCode());
     }
 
     @ApiOperation(value = "学生登录", notes = "学生使用证件号码和密码登录")
