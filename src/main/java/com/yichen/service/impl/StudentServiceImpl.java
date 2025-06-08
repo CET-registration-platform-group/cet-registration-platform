@@ -115,7 +115,6 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
             return Result.failed("邮箱已存在");
         }
 
-
 //         验证验证码
         if (!emailUtils.verifyCode(student.getEmail(), verificationCode)) {
             return Result.failed("验证码错误或已过期");
@@ -155,11 +154,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
-    public void sendResetEmail(String email) {
+    public Result sendResetEmail(String email) {
         // 查询学生
         Student student = lambdaQuery().eq(Student::getEmail, email).one();
         if (student == null) {
-            throw new RuntimeException("该邮箱未注册");
+            return Result.failed("该邮箱未注册");
         }
 
         // 生成验证码
@@ -170,19 +169,20 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // 保存验证码到缓存
         emailUtils.saveVerificationCode(email, code);
+        return Result.success("重置密码邮件已发送");
     }
 
     @Override
-    public void resetPassword(String email, String code, String newPassword) {
+    public Result resetPassword(String email, String code, String newPassword) {
         // 验证验证码
         if (!emailUtils.verifyCode(email, code)) {
-            throw new RuntimeException("验证码错误或已过期");
+            return Result.failed("验证码错误或已过期");
         }
 
         // 查询学生
         Student student = lambdaQuery().eq(Student::getEmail, email).one();
         if (student == null) {
-            throw new RuntimeException("学生不存在");
+            return Result.failed("学生不存在");
         }
 
         // 更新密码
@@ -191,5 +191,6 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // 清除验证码
         emailUtils.removeVerificationCode(email);
+        return Result.success("密码重置成功");
     }
 }

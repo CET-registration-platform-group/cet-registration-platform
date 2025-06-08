@@ -45,15 +45,19 @@ public interface StudentService extends IService<Student> {
 
     /**
      * 发送重置密码邮件
+     *
      * @param email 邮箱
+     * @return
      */
-    void sendResetEmail(String email);
+    Result sendResetEmail(String email);
 
     /**
      * 重置密码
-     * @param email 邮箱
-     * @param code 验证码
+     *
+     * @param email       邮箱
+     * @param code        验证码
      * @param newPassword 新密码
+     * @return
      */
-    void resetPassword(String email, String code, String newPassword);
+    Result resetPassword(String email, String code, String newPassword);
 }

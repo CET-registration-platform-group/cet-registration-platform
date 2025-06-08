@@ -91,8 +91,7 @@ public class FrontStudentController {
         @ApiParam(value = "邮箱地址", required = true, example = "student@example.com")
         @RequestParam String email
     ) {
-        studentService.sendResetEmail(email);
-        return Result.success("重置密码邮件已发送");
+        return studentService.sendResetEmail(email);
     }
 
     @ApiOperation(value = "重置密码", notes = "使用验证码重置密码")
@@ -112,7 +111,6 @@ public class FrontStudentController {
         @ApiParam(value = "新密码", required = true)
         @RequestParam String newPassword
     ) {
-        studentService.resetPassword(email, code, newPassword);
-        return Result.success("密码重置成功");
+        return studentService.resetPassword(email, code, newPassword);
     }
 }
