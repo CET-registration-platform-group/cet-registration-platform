@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yichen.common.Result;
+import com.yichen.entity.RegistrationInfo;
 import com.yichen.exception.ConstraintViolationException;
+import com.yichen.mapper.RegistrationInfoMapper;
 import com.yichen.mapper.StudentMapper;
 import com.yichen.entity.Student;
 import com.yichen.service.ConstraintService;
+import com.yichen.service.RegistrationInfoService;
 import com.yichen.service.StudentService;
 import com.yichen.utils.*;
 import com.yichen.vo.StudentVO;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
 
     private final ConstraintService constraintService;
+    private final RegistrationInfoMapper registrationInfoMapper;
     private final JwtUtil jwtUtil;
     private final BeanConverter beanConverter;
 
@@ -125,6 +129,10 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // 保存学生信息
         save(student);
+        RegistrationInfo registrationInfo =new RegistrationInfo();
+        registrationInfo.setStudentId(student.getId());
+        registrationInfo.setCompletedSteps("[]");
+        registrationInfoMapper.insert(registrationInfo);
 
         // 清除验证码
         emailUtils.removeVerificationCode(student.getEmail());
