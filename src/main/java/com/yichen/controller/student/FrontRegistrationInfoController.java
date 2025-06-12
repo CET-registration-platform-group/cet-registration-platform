@@ -50,13 +50,13 @@ public class FrontRegistrationInfoController {
     @PostMapping("/complete-step")
     public Result completeStep(
         @ApiParam(value = "学生ID", required = true, example = "1")
-        @RequestBody Long studentId,
-            
-        @ApiParam(value = "要完成的步骤名称", required = true, example = "AGREEMENT", 
+        @RequestParam Long studentId,
+
+        @ApiParam(value = "要完成的步骤名称", required = true, example = "AGREEMENT",
                  allowableValues = "AGREEMENT,QUAL_QUERY,QUAL_CONFIRM,WRITTEN_APPLY,WRITTEN_PAY,ORAL_APPLY,ORAL_PAY,COMPLETE,PRINT_ADMIT")
-        @RequestBody String completedStep
+        @RequestParam String completedStep
     ) {
         registrationInfoService.completeStep(studentId, completedStep);
         return Result.success("步骤完成");
     }
-} 
+}

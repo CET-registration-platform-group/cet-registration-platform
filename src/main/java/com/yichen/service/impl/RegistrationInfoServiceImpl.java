@@ -31,7 +31,7 @@ public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMap
         LambdaQueryWrapper<RegistrationInfo> wrapper = new LambdaQueryWrapper<RegistrationInfo>()
             .eq(RegistrationInfo::getStudentId, studentId);
         RegistrationInfo registrationInfo = getOne(wrapper);
-        
+
         if (registrationInfo == null) {
             throw new RuntimeException("报名信息不存在");
         }
@@ -40,7 +40,19 @@ public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMap
         JSONArray steps = Optional.ofNullable(registrationInfo.getCompletedSteps())
                 .map(JSONArray::parseArray)
                 .orElse(new JSONArray());
-        
+
+        if (steps.isEmpty()) {
+            if ("AGREEMENT".equals(completedStep)) {
+                // 允许完成第一个步骤
+                steps.add(completedStep);
+                registrationInfo.setCompletedSteps(steps.toJSONString());
+                registrationInfo.setCurrentStep(completedStep);
+                updateById(registrationInfo);
+                return;
+            } else {
+                throw new RuntimeException("新用户只能从第一步（AGREEMENT）开始");
+            }
+        }
         // 获取所有已完成步骤的下一步
         List<RegistrationStep> nextSteps = new ArrayList<>();
         for (int i = 0; i < steps.size(); i++) {
@@ -48,7 +60,7 @@ public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMap
             RegistrationStep step = RegistrationStep.valueOf(stepName);
             nextSteps.addAll(step.getNextSteps(true));
         }
-        
+
         // 判断新完成的步骤是否在已完成步骤的下一步中
         RegistrationStep completedStepEnum = RegistrationStep.valueOf(completedStep);
         if (!nextSteps.contains(completedStepEnum)) {
@@ -59,11 +71,11 @@ public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMap
         if (!steps.contains(completedStep)) {
             steps.add(completedStep);
         }
-        
+
         // 更新completedSteps字段
         registrationInfo.setCompletedSteps(steps.toJSONString());
         registrationInfo.setCurrentStep(completedStep);
-        
+
         updateById(registrationInfo);
     }
-} 
+}
