@@ -5,24 +5,34 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yichen.entity.ExamInfo;
+import com.yichen.entity.ExamSeat;
 import com.yichen.entity.RegistrationInfo;
 import com.yichen.entity.Student;
 import com.yichen.enums.RegistrationStep;
 import com.yichen.mapper.RegistrationInfoMapper;
+import com.yichen.service.ExamInfoService;
+import com.yichen.service.ExamSeatService;
 import com.yichen.service.RegistrationInfoService;
 import com.yichen.service.StudentService;
 import com.yichen.utils.BeanConverter;
 import com.yichen.vo.RegistrationInfoVO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMapper, RegistrationInfo> implements RegistrationInfoService {
+
+    private final StudentService studentService;
+    private final ExamSeatService examSeatService;
+    private final ExamInfoService examInfoService;
 
     @Override
     @Transactional
@@ -77,5 +87,36 @@ public class RegistrationInfoServiceImpl extends ServiceImpl<RegistrationInfoMap
         registrationInfo.setCurrentStep(completedStep);
 
         updateById(registrationInfo);
+
+        // 如果是完成最后一步（COMPLETE），则分配座位并生成考试信息
+        if (RegistrationStep.COMPLETE.name().equals(completedStep)) {
+            // 获取学生信息
+            Student student = studentService.getById(studentId);
+            if (student == null) {
+                throw new RuntimeException("学生信息不存在");
+            }
+
+            // 查找空闲座位
+            LambdaQueryWrapper<ExamSeat> seatWrapper = new LambdaQueryWrapper<>();
+            seatWrapper.eq(ExamSeat::getStatus, 0); // 0表示未占用
+            List<ExamSeat> list = examSeatService.list(seatWrapper);
+            ExamSeat availableSeat=list.get(0);
+
+            if (availableSeat == null) {
+                throw new RuntimeException("没有可用的考试座位");
+            }
+
+            // 创建考试信息
+            ExamInfo examInfo = ExamInfo.builder()
+                .studentId(studentId)
+                .examSeatId(availableSeat.getId())
+                .examTime(LocalDateTime.now().plusDays(7)) // 假设考试时间在7天后
+                .examType("笔试") // 根据实际情况设置
+                .examLevel("四级") // 根据实际情况设置
+                .build();
+
+            // 保存考试信息（会自动更新座位状态）
+            examInfoService.save(examInfo);
+        }
     }
 }
